@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="../../plugins/element-ui/index.css" />
+  <link rel="stylesheet" href="../../styles/common.css" />
+  <link rel="stylesheet" href="../../styles/page.css" />
+  <style>
+    #food-add-app .uploadImg .el-form-item__label::before{
+      content: '*';
+      color: #F56C6C;
+      margin-right: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="addBrand-container" id="food-add-app">
+  <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+    <el-form-item label="患者姓名" prop="name">
+      <el-input v-model="ruleForm.name"></el-input>
+    </el-form-item>
+    <el-form-item label="责任医师" prop="doctor">
+      <el-input v-model="ruleForm.doctor"></el-input>
+    </el-form-item>
+    <el-form-item label="基本信息" prop="info">
+      <el-input type="textarea" v-model.number="ruleForm.info"></el-input>
+    </el-form-item>
+    <el-form-item>
+      <el-button type="primary" @click="submitForm('ruleForm')">提交</el-button>
+      <el-button @click="resetForm('ruleForm')">重置</el-button>
+    </el-form-item>
+  </el-form>
+</div>
+<!-- 开发环境版本，包含了有帮助的命令行警告 -->
+<script src="../../plugins/vue/vue.js"></script>
+<!-- 引入组件库 -->
+<script src="../../plugins/element-ui/index.js"></script>
+<!-- 引入axios -->
+<script src="../../plugins/axios/axios.min.js"></script>
+<script src="../../js/request.js"></script>
+<script src="../../js/index.js"></script>
+<script src="../../api/doctor.js"></script>
+<script src="../../js/fakeData.js"></script>
+<script>
+  new Vue({
+    el: '#food-add-app',
+    data() {
+      return {
+        ruleForm: {
+          name: '',
+          department: '',
+          info: '',
+        },
+        rules: {
+          name: [
+            { required: true, message: '请输入医生姓名', trigger: 'blur' }
+          ],
+          doctor: [
+            { required: true, message: '请输入所属部门', trigger: 'blur' }
+          ],
+          info: [
+            { required: true, message: '请输入医生基本信息', trigger: 'blur' }
+          ],
+        }
+      }
+    },
+    created() {
+      this.id = requestUrlParam('id')
+      this.actionType = this.id ? 'edit' : 'add'
+      console.log(this.actionType)
+      if (this.id) {
+        this.init()
+      }
+    },
+    mounted() {
+    },
+    methods: {
+      async init () {
+        querySetmealById(this.id).then((res) => {
+          if (String(res.code) === '1') {
+            this.ruleForm = res
+          } else {
+            this.$message.error(res.msg || '操作失败')
+          }
+        })
+      },
+
+      submitForm(formName, st){
+        this.$refs[formName].validate((valid) => {
+          console.log(111)
+        })
+      },
+
+      resetForm(formName) {
+        this.$refs[formName].resetFields();
+      },
+
+      goBack(){
+        window.parent.menuHandle({
+          id: '4',
+          url: '/backend/page/patient/list.html',
+          name: '患者信息'
+        },false)
+      }
+    }
+  })
+</script>
+</body>
+</html>
