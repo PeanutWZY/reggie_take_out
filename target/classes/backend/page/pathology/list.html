@@ -15,36 +15,35 @@
     <div class="container">
         <div class="tableBar">
             <el-input
-                v-model="input"
-                placeholder="请输入患者相关信息"
-                style="width: 250px"
-                clearable
-                @keyup.enter.native="handleQuery"
+                    v-model="input"
+                    placeholder="请输入患者相关信息"
+                    style="width: 250px"
+                    clearable
+                    @keyup.enter.native="handleQuery"
             >
                 <i
-                    slot="prefix"
-                    class="el-input__icon el-icon-search"
-                    style="cursor: pointer"
-                    @click="init"
+                        slot="prefix"
+                        class="el-input__icon el-icon-search"
+                        style="cursor: pointer"
+                        @click="init"
                 ></i>
             </el-input>
             <div class="tableLab">
                 <span class="span-btn delBut non" @click="deleteHandle('批量', null)">批量删除</span>
                 <el-button
-                    type="primary"
-                    @click="addPatient('add')"
+                        type="primary"
+                        @click="addPatient('add')"
                 >
                     + 添加患者信息
                 </el-button>
             </div>
         </div>
         <el-table
-            :data="tableData"
-            stripe
-            class="tableBox"
-            @selection-change="handleSelectionChange"
+                :data="tableData"
+                stripe
+                class="tableBox"
+                @selection-change="handleSelectionChange"
         >
-            <!--  表格内容    -->
             <el-table-column type="selection"></el-table-column>
             <el-table-column prop="name" label="患者姓名"></el-table-column>
             <el-table-column prop="doctor" label="负责医生"></el-table-column>
@@ -55,30 +54,40 @@
                 </template>
             </el-table-column>
             <el-table-column
-                label="操作"
-                width="160"
-                align="center"
+                    label="操作"
+                    width="160"
+                    align="center"
             >
                 <template slot-scope="scope">
                     <el-button
-                        type="text"
-                        size="small"
-                        class="blueBug"
-                        @click="addPatient(scope.row.id)"
+                            type="text"
+                            size="small"
+                            class="blueBug"
+                            @click="addPatient(scope.row.id)"
                     >
                         修改
                     </el-button>
                     <el-button
-                        type="text"
-                        size="small"
-                        class="delBut non"
-                        @click="deleteHandle('单删', scope.row.id)"
+                            type="text"
+                            size="small"
+                            class="delBut non"
+                            @click="deleteHandle('单删', scope.row.id)"
                     >
                         删除
                     </el-button>
                 </template>
             </el-table-column>
         </el-table>
+        <el-pagination
+                class="pageList"
+                :page-sizes="[10, 20, 30, 40]"
+                :page-size="pageSize"
+                layout="total, sizes, prev, pager, next, jumper"
+                :total="counts"
+                @size-change="handleSizeChange"
+                :current-page.sync="page"
+                @current-change="handleCurrentChange"
+        ></el-pagination>
     </div>
 </div>
 <!-- 开发环境版本，包含了有帮助的命令行警告 -->
@@ -112,7 +121,19 @@
         },
         methods: {
             async init () {
-                // 初始化数据
+                // const params = {
+                //   page: this.page,
+                //   pageSize: this.pageSize,
+                //   name: this.input ? this.input : undefined
+                // }
+                // await getDishPage(params).then(res => {
+                //   if (String(res.code) === '1') {
+                //     this.tableData = res.data.records || []
+                //     this.counts = res.data.total
+                //   }
+                // }).catch(err => {
+                //   this.$message.error('请求出错了：' + err)
+                // })
                 this.tableData = patientList
             },
             getImage (image) {
@@ -162,6 +183,57 @@
                     })
                 })
             },
+
+            //状态更改
+            statusHandle (row) {
+                let params = {}
+                if (typeof row === 'string' ) {
+                    if (this.checkList.length === 0) {
+                        this.$message.error('批量操作，请先勾选操作菜品！')
+                        return false
+                    }
+                    params.id = this.checkList.join(',')
+                    params.status = row
+                } else {
+                    params.id = row.id
+                    params.status = row.status ? '0' : '1'
+                }
+                this.dishState = params
+                this.$confirm('确认更改该菜品状态?', '提示', {
+                    'confirmButtonText': '确定',
+                    'cancelButtonText': '取消',
+                    'type': 'warning'
+                }).then(() => {
+                    // 起售停售---批量起售停售接口
+                    dishStatusByStatus(this.dishState).then(res => {
+                        if (res.code === 1) {
+                            this.$message.success('菜品状态已经更改成功！')
+                            this.handleQuery()
+                        } else {
+                            this.$message.error(res.msg || '操作失败')
+                        }
+                    }).catch(err => {
+                        this.$message.error('请求出错了：' + err)
+                    })
+                })
+            },
+
+            // 全部操作
+            handleSelectionChange (val){
+                let checkArr = []
+                val.forEach((n) => {
+                    checkArr.push(n.id)
+                })
+                this.checkList = checkArr
+            },
+            handleSizeChange (val) {
+                this.pageSize = val
+                this.init()
+            },
+            handleCurrentChange (val) {
+                this.page = val
+                this.init()
+            }
         }
     })
 </script>
